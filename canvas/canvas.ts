@@ -30,25 +30,28 @@ class Canvas {
 	private cadrillage: 			boolean 			= false;
 	private repere: 				boolean 			= true;
 	private texte: 					string 				= "";
-	public points: 					Array<Array<Point>> = [];
-	private rectangle_all_points: 	Array<number> 		= [];
+	private points: 				Array<Array<Point>>;
+	private rectangle_all_points: 	Array<number> 		= new Array<number>(4);
 	private clear_info_point: 		boolean 			= false;
 	private click: 					boolean 			= false;
 	private origine_dorigine: 		Array<number> 		= [0, 0];
 	private origine_deplacement: 	Array<number>		= [Number.MAX_VALUE, 0];
 	private contx:					CanvasRenderingContext2D;
 	private origine: 				Array<number>;
-	private couleurs: 				Array<string> 		= ["green", "blue", "orange", "red", "purple", "grey"];
+	private couleurs: 				Array<string> 		= ["white", "green", "blue", "orange", "red", "purple", "grey"];
+	private nb_courbe_max: 			number;
 	private elem_zoom:				HTMLElement	 		= null;
 
 	public constructor(private elem_canvas_doc: HTMLCanvasElement){
 		this.contx = this.elem_canvas_doc.getContext("2d");
 		this.origine = [this.elem_canvas_doc.width / 2, this.elem_canvas_doc.height / 2];
+		this.nb_courbe_max = this.couleurs.length;
+		this.points = new Array<Array<Point>>(this.nb_courbe_max);
 	}
 
 	private info_point(e: MouseEvent) {
 		// Si la liste de point est vide, pas besoin d'aller plus loin.
-		if (this.points.length == 0) return;
+		if (this.points.every( function(a: Array<Point>): boolean {return a === undefined} )) return;
 
 		// On definit la taille de la zone autour du point.
 		let espace_autour = this.taille_points < 5 ? 5 : this.taille_points;
@@ -74,7 +77,7 @@ class Canvas {
 		// |         |
 		// 03-------23
 
-		// Permet de dessiner le rectangle contenant les points.
+		// // Permet de dessiner le rectangle contenant les points.
 		// this.contx.beginPath();
 		// this.contx.moveTo(this.rectangle_all_points[0] - espace_autour, this.rectangle_all_points[1] - espace_autour);
 		// this.contx.lineTo(this.rectangle_all_points[2] + espace_autour, this.rectangle_all_points[1] - espace_autour);
@@ -85,47 +88,50 @@ class Canvas {
 		// this.contx.closePath();
 
 		// Pour toutes les courbes.
-		for (let i = 0; i < this.points.length; i++) {
+		for (let i = 0; i < this.nb_courbe_max; i++) {
 
-			// Pour tous les points de la courbe i.
-			// Pas de forEach car besoin de la pos du point.
-			for (let j = 0; j < this.points[i].length; j++) {
+			if(this.points[i] !== undefined){
 
-				// Si la souris est dans la zone du point [i][j].
-				if (this.points[i][j].x_in_canvas(this.origine, this.zoom) + espace_autour >= e.clientX - this.elem_canvas_doc.offsetLeft &&
-					this.points[i][j].x_in_canvas(this.origine, this.zoom) - espace_autour < e.clientX - this.elem_canvas_doc.offsetLeft &&
-					this.points[i][j].y_in_canvas(this.origine, this.zoom) + espace_autour >= e.clientY - this.elem_canvas_doc.offsetTop &&
-					this.points[i][j].y_in_canvas(this.origine, this.zoom) - espace_autour < e.clientY - this.elem_canvas_doc.offsetTop) {
+				// Pour tous les points de la courbe i.
+				// Pas de forEach car besoin de la pos du point.
+				for (let j = 0; j < this.points[i].length; j++) {
 
-					// On sauve l'ancienne police.
-					let old_font = this.contx.font;
+					// Si la souris est dans la zone du point [i][j].
+					if (this.points[i][j].x_in_canvas(this.origine, this.zoom) + espace_autour >= e.clientX - this.elem_canvas_doc.offsetLeft &&
+						this.points[i][j].x_in_canvas(this.origine, this.zoom) - espace_autour < e.clientX - this.elem_canvas_doc.offsetLeft &&
+						this.points[i][j].y_in_canvas(this.origine, this.zoom) + espace_autour >= e.clientY - this.elem_canvas_doc.offsetTop &&
+						this.points[i][j].y_in_canvas(this.origine, this.zoom) - espace_autour < e.clientY - this.elem_canvas_doc.offsetTop) {
 
-					// On definit une police pour l'affichage des infos.
-					this.contx.font = "bold 15px Arial";
-					this.contx.fillStyle = "white";
+						// On sauve l'ancienne police.
+						let old_font = this.contx.font;
 
-					// Le texte à afficher au dessus de la souris.
-					let text = "Point n°" + (j + 1).toString();
+						// On definit une police pour l'affichage des infos.
+						this.contx.font = "bold 15px Arial";
+						this.contx.fillStyle = "white";
 
-					// On dessine le texte au dessus de la souris (le -10) et centré (le measureText).
-					this.contx.fillText(text,
-						e.clientX - this.elem_canvas_doc.offsetLeft - this.contx.measureText(text).width / 2,
-						e.clientY - this.elem_canvas_doc.offsetTop - 10);
+						// Le texte à afficher au dessus de la souris.
+						let text = "Point n°" + (j + 1).toString();
 
-					// Le texte à afficher en dessous de la souris.
-					text = "Position X : " + ((this.points[i][j].x).toFixed(2)).toString() + " - Position Y : " + ((this.points[i][j].y).toFixed(2)).toString();
+						// On dessine le texte au dessus de la souris (le -10) et centré (le measureText).
+						this.contx.fillText(text,
+							e.clientX - this.elem_canvas_doc.offsetLeft - this.contx.measureText(text).width / 2,
+							e.clientY - this.elem_canvas_doc.offsetTop - 10);
 
-					// On dessine le texte en dessous de la souris.
-					this.contx.fillText(text,
-						e.clientX - this.elem_canvas_doc.offsetLeft - this.contx.measureText(text).width / 2,
-						e.clientY - this.elem_canvas_doc.offsetTop + 30);
+						// Le texte à afficher en dessous de la souris.
+						text = "Position X : " + ((this.points[i][j].x).toFixed(2)).toString() + " - Position Y : " + ((this.points[i][j].y).toFixed(2)).toString();
 
-					// On remet la police d'avant.
-					this.contx.font = old_font;
+						// On dessine le texte en dessous de la souris.
+						this.contx.fillText(text,
+							e.clientX - this.elem_canvas_doc.offsetLeft - this.contx.measureText(text).width / 2,
+							e.clientY - this.elem_canvas_doc.offsetTop + 30);
 
-					// On demande d'effacer le texte au prochain appel (permet de ne pas mettre un reload_all qui serai appelé à chaque mouvement de la souris).
-					this.clear_info_point = true;
-					return;
+						// On remet la police d'avant.
+						this.contx.font = old_font;
+
+						// On demande d'effacer le texte au prochain appel (permet de ne pas mettre un reload_all qui serai appelé à chaque mouvement de la souris).
+						this.clear_info_point = true;
+						return;
+					}
 				}
 			}
 		}
@@ -178,40 +184,85 @@ class Canvas {
 	}
 
 	public molette(e: WheelEvent) {
+		if (e.deltaY > 0) this.zoom_moins();
+		else this.zoom_plus();
+
+		// On évite que la molette puisse descendre la page en même temps que le zoom.
+		e.preventDefault();
+	}
+
+	public zoom_plus(vitesse = 1){
+		// Si le zoom actuel est > 10, on ajoute 1 si
+		// on veux zoomer et -1 si on veut dézoomer.
+		// Si delta > 0, molette vers le bas.
+		if (this.zoom >= 10) {
+			this.zoom += 1 * vitesse;
+		}
+		else if (this.zoom >= 1) {
+			this.zoom += .5 * vitesse;
+		}
+		else if (this.zoom >= .1) {
+			this.zoom += .1 * vitesse;
+		}
+		else {
+			this.zoom += .01 * vitesse;
+		}
+
+		// Pour éviter que des chiffres après la virgule trainent (dans une vitesse 10 par exemple).
+		if (this.zoom >= 10) {
+			this.zoom = parseFloat(this.zoom.toFixed(0));
+		}
+		else if (this.zoom >= .1) {
+			this.zoom = parseFloat(this.zoom.toFixed(1));
+		}
+		else {
+			this.zoom = parseFloat(this.zoom.toFixed(2));
+		}
+
+		// On maj le titre du canvas.
+		if (this.elem_zoom != null) {
+			this.elem_zoom.innerHTML = "Zoom : x " + this.zoom;
+		}
+
+		if (this.pas_auto) {
+			this.fpas_auto(true);
+		}
+
+		// On recharge le canvas.
+		this.reload_all();
+	}
+
+	public zoom_moins(vitesse = 1){
 		// Si le zoom actuel est > 10, on ajoute 1 si
 		// on veux zoomer et -1 si on veut dézoomer.
 		// Si delta > 0, molette vers le bas.
 		if (this.zoom > 10) {
-			if (e.deltaY > 0 && this.zoom > 0) this.zoom -= 1;
-			else this.zoom += 1;
+			this.zoom -= 1 * vitesse;
 		}
 		// Si le zoom est = 10, on dézoom avec -0.5 et on zoom avec
 		// + 1 (se qui permet d'éviter un passage de 10 à 9 sans passer
 		// par 9.5).
-		else if (this.zoom == 10) {
-			if (e.deltaY > 0 && this.zoom > 0) this.zoom -= .5;
-			else this.zoom += 1;
+		else if (this.zoom > 1 || this.zoom == 10) {
+			this.zoom -= .5 * vitesse;
 		}
-		else if (this.zoom > 1) {
-			if (e.deltaY > 0 && this.zoom > 0) this.zoom -= .5;
-			else this.zoom += .5;
-		}
-		else if (this.zoom == 1) {
-			if (e.deltaY > 0 && this.zoom > 0) this.zoom -= .1;
-			else this.zoom += .5;
-		}
-		else if (this.zoom > 0.1) {
-			if (e.deltaY > 0 && this.zoom > 0) this.zoom -= .1;
-			else this.zoom += .1;
-		}
-		else if (this.zoom == 0.1) {
-			if (e.deltaY > 0 && this.zoom > 0) this.zoom -= .01;
-			else this.zoom += .1;
+		else if (this.zoom > 0.1 || this.zoom == 1) {
+			this.zoom -= .1 * vitesse;
 		}
 		else {
-			if (e.deltaY > 0 && this.zoom > 0) this.zoom -= .01;
-			else this.zoom += .01;
+			this.zoom -= .01 * vitesse;
 		}
+
+		// Pour éviter que des chiffres après la virgule trainent (dans une vitesse 10 par exemple).
+		if (this.zoom > 10) {
+			this.zoom = parseFloat(this.zoom.toFixed(0));
+		}
+		else if (this.zoom > 0.1) {
+			this.zoom = parseFloat(this.zoom.toFixed(1));
+		}
+		else {
+			this.zoom = parseFloat(this.zoom.toFixed(2));
+		}
+
 
 		// On limite le dézoom à .01.
 		if (this.zoom < .01) this.zoom = .01;
@@ -220,19 +271,16 @@ class Canvas {
 		this.zoom = parseFloat(this.zoom.toFixed(2));
 
 		// On maj le titre du canvas.
-		if(this.elem_zoom != null){
+		if (this.elem_zoom != null) {
 			this.elem_zoom.innerHTML = "Zoom : x " + this.zoom;
 		}
 
 		if (this.pas_auto) {
-			this.fpas_auto(false);
+			this.fpas_auto(true);
 		}
 
 		// On recharge le canvas.
 		this.reload_all();
-
-		// On évite que la molette puisse descendre la page en même temps que le zoom.
-		e.preventDefault();
 	}
 
 	private fpas_auto(actualise: boolean) {
@@ -414,14 +462,14 @@ class Canvas {
 			if (p[i].x_in_canvas(this.origine, this.zoom) < this.rectangle_all_points[0]) {
 				this.rectangle_all_points[0] = p[i].x_in_canvas(this.origine, this.zoom);
 			}
-			else if (p[i].x_in_canvas(this.origine, this.zoom) > this.rectangle_all_points[2]) {
+			if (p[i].x_in_canvas(this.origine, this.zoom) > this.rectangle_all_points[2]) {
 				this.rectangle_all_points[2] = p[i].x_in_canvas(this.origine, this.zoom);
 			}
 
 			if (p[i].y_in_canvas(this.origine, this.zoom) < this.rectangle_all_points[1]) {
 				this.rectangle_all_points[1] = p[i].y_in_canvas(this.origine, this.zoom);
 			}
-			else if (p[i].y_in_canvas(this.origine, this.zoom) > this.rectangle_all_points[3]) {
+			if (p[i].y_in_canvas(this.origine, this.zoom) > this.rectangle_all_points[3]) {
 				this.rectangle_all_points[3] = p[i].y_in_canvas(this.origine, this.zoom);
 			}
 		}
@@ -496,8 +544,10 @@ class Canvas {
 		this.rectangle_all_points = [Number.MAX_VALUE, Number.MAX_VALUE, Number.MIN_VALUE, Number.MIN_VALUE];
 
 		// On dessine tous les points contenu dans le tableau point du canvas.
-		for (var i = 0; i < this.points.length; i++) {
-			this.dessin_points(this.points[i], this.couleurs[i]);
+		for (var i = 0; i < this.nb_courbe_max; i++) {
+			if (this.points[i] !== undefined){
+				this.dessin_points(this.points[i], this.couleurs[i]);
+			}
 		}
 
 		// On dessine le texte du canvas.
@@ -636,6 +686,7 @@ class Canvas {
 
 	public set_points(val: Array<Array<Point>>){
 		this.points = val;
+		this.reload_all();
 		return true;
 	}
 
@@ -643,24 +694,52 @@ class Canvas {
 		return this.points;
 	}
 
-	public add_point(pos: number, point: Point){
-		if(pos < 0 || pos > 6) return false;
-		this.points[pos].push(point);
+	private indexOfPoint(point: Point, array: Array<Point>){
+		for(let i = 0; i < array.length; i++){
+			if(point.equals(array[i]))
+				return i;
+		}
+		return -1;
+	}
+
+	public add_point(pos: number, point: Point, after?: Point){
+		if (pos < 0 || pos > this.nb_courbe_max) return false;
+		if (this.points[pos] === undefined) this.points[pos] = new Array<Point>();
+		if(after){
+			let pos_after: number = this.indexOfPoint(after, this.points[pos]);
+			if(pos_after === -1) return false;
+			this.points[pos].splice(pos_after+1, 0, point);
+		}
+		else{
+			this.points[pos].push(point);
+		}
 		this.reload_all();
 		return true;
 	}
 
 	public add_points(pos: number, points: Array<Point>){
-		points.forEach(elem => {
-			if(!this.add_point(pos, elem)) return false;
-		});
+		if (pos < 0 || pos > this.nb_courbe_max) return false;
+
+		if (this.points[pos] === undefined) {
+			this.points[pos] = points;
+			return true;
+		}
+		else {
+			points.forEach(point => {
+				this.points[pos].push(point);
+			});
+		}
+		this.reload_all();
 		return true;
 	}
 
 	public rem_point(pos: number, point: Point){
+		if (this.points[pos] === undefined) return false;
+
 		for(let i = 0; i < this.points[pos].length; i++){
 			if(this.points[pos][i].equals(point)){
 				this.points[pos].splice(i, 1);
+				this.reload_all();
 				return true;
 			}
 		}
@@ -674,16 +753,19 @@ class Canvas {
 
 	public replace_points(pos: number, points: Array<Point>){
 		this.points[pos] = points;
+		this.reload_all();
 		return true;
 	}
 
 	public clear_all_points(){
-		this.points = new Array<Array<Point>>();
+		this.points = new Array<Array<Point>>(this.nb_courbe_max);
+		this.reload_all();
 		return true;
 	}
 
 	public clear_points(pos: number){
 		this.points.splice(pos, 1);
+		this.reload_all();
 		return true;
 	}
 
@@ -723,9 +805,22 @@ function resize() {
 	can.set_size_canvas(-1, window.innerHeight - dessusdessous);
 }
 
-resize();
+// Si on appuie sur une touche...
+window.addEventListener("keydown", function (event) {
+	// ... et que cette touche est la touche "+", on
+	// zoom (voir la fonction molette()).
+	if (event.key == "+") {
+		can.zoom_plus(10);
+	}
 
-can.points.push(new Array<Point>());
-can.points[0].push(new Point(0, 0));
-can.points[0].push(new Point(1, 0));
-can.points[0].push(new Point(1, 1));
+	// Et si c'est la touche "-", on dézoom.
+	else if (event.key == "-") {
+		can.zoom_moins(10);
+	}
+
+}, true);
+
+resize();
+can.set_elem_affichage_zoom(document.getElementById("zoom"));
+
+can.add_points(0, [new Point(0, 0), new Point(1, 0), new Point(1, 1)]);
