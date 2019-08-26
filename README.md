@@ -20,22 +20,44 @@ Documentation en cours d'écriture.
 
 ## Changelog :
 
-### Version Alpha 190824.1 :
+### Version Alpha 190826.1 :
 
-- La taille de la liste de points est maintenant liée directement au nombre de couleurs de la liste "couleurs".
+- Ajout de la possibilité de construire un Canvas avec une liste de couleurs perso.
 
-- Taille de la liste de points est donc maintenant fixé.
+- Ajout d'accesseurs pour la liste de couleurs.
 
-- Ajout des comparaisons de la liste de points avec undefined partout.
+- Système de "old ctx.font" retiré (désuet ici).
 
-- Ajout d'un paramètre after dans add_point() pour pouvoir placer un point après un autre (et donc entre deux points).
+- Changement de taille des chiffres du repère refonctionne.
 
-- Correction d'un bug au niveau du rectangle_all_point lorsqu'il y a un seul point ou uniquement des points alignés sur x ou y.
+- L'affichage du texte canvas fonctionne.
 
-- Ajout de la variable "this.nb_courbe_max" au lieu de "this.points.length" ou de la constante 6. Permettra de modifier les couleurs de la liste "couleurs".
+- Ajout de la méthode "origine_au_centre()" [-> Projet Golf].
 
-- Ajout des méthodes zoom_plus() et zoom_moins(), sortent de molette(e).
+- Ajout de la fonction "init_canvas()" dans canvas.ts permettant d'initialiser le canvas,
 
-- Ajout des vitesses dans les zoom.
+  modification de l'element canvas dans l'index.html sans les events,
 
-- Ajout des touches + et - du clavier pour zoomer et dézoomer.
+  ajout d'un fichier "examples.ts" pour mettre des exemples d'utilisations du canvas.
+
+- Ajout d'options dans la colonne option dans le index.html :
+
+  Origine au milieu 						[-> Projet Golf]
+
+  Afficher le cadrillage 					[-> Projet Golf]
+
+  Afficher le repère 						[-> Projet Golf]
+
+  Taille des chiffres sur les axes 		[-> Projet Golf]
+
+  Pas appliqué aux graduations			[-> Projet Golf]
+
+  Taille des points 						[-> Projet Golf]
+
+  Taille des lignes reliant les points	[-> Projet Golf]
+
+  Affichage texte
+
+  Zoom
+
+- Ajout de vérifications dans set_zoom().
