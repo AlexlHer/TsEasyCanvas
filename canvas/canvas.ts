@@ -38,11 +38,14 @@ class Canvas {
 	private origine_deplacement: 	Array<number>		= [Number.MAX_VALUE, 0];
 	private contx:					CanvasRenderingContext2D;
 	private origine: 				Array<number>;
-	private couleurs: 				Array<string> 		= ["white", "green", "blue", "orange", "red", "purple", "grey"];
 	private nb_courbe_max: 			number;
 	private elem_zoom:				HTMLElement	 		= null;
 
-	public constructor(private elem_canvas_doc: HTMLCanvasElement){
+	public constructor(	
+		private elem_canvas_doc: HTMLCanvasElement, 
+		private couleurs: Array<string> = ["white", "green", "blue", "orange", "red", "purple", "grey"]
+		){
+
 		this.contx = this.elem_canvas_doc.getContext("2d");
 		this.origine = [this.elem_canvas_doc.width / 2, this.elem_canvas_doc.height / 2];
 		this.nb_courbe_max = this.couleurs.length;
@@ -51,7 +54,7 @@ class Canvas {
 
 	private info_point(e: MouseEvent) {
 		// Si la liste de point est vide, pas besoin d'aller plus loin.
-		if (this.points.every( function(a: Array<Point>): boolean {return a === undefined} )) return;
+		if (this.points.every( (a: Array<Point>): boolean => {return a === undefined} )) return;
 
 		// On definit la taille de la zone autour du point.
 		let espace_autour = this.taille_points < 5 ? 5 : this.taille_points;
@@ -102,11 +105,8 @@ class Canvas {
 						this.points[i][j].y_in_canvas(this.origine, this.zoom) + espace_autour >= e.clientY - this.elem_canvas_doc.offsetTop &&
 						this.points[i][j].y_in_canvas(this.origine, this.zoom) - espace_autour < e.clientY - this.elem_canvas_doc.offsetTop) {
 
-						// On sauve l'ancienne police.
-						let old_font = this.contx.font;
-
 						// On definit une police pour l'affichage des infos.
-						this.contx.font = "bold 15px Arial";
+						this.contx.font = "bold " + 15 + "px Arial";
 						this.contx.fillStyle = "white";
 
 						// Le texte à afficher au dessus de la souris.
@@ -124,9 +124,6 @@ class Canvas {
 						this.contx.fillText(text,
 							e.clientX - this.elem_canvas_doc.offsetLeft - this.contx.measureText(text).width / 2,
 							e.clientY - this.elem_canvas_doc.offsetTop + 30);
-
-						// On remet la police d'avant.
-						this.contx.font = old_font;
 
 						// On demande d'effacer le texte au prochain appel (permet de ne pas mettre un reload_all qui serai appelé à chaque mouvement de la souris).
 						this.clear_info_point = true;
@@ -329,6 +326,9 @@ class Canvas {
 		// On défini la taille du trait à 0.5px (pour avoir un effet de transparence).
 		this.contx.lineWidth = .5;
 
+		// On défini la police de caractère à utiliser dans le dessin du repere.
+		this.contx.font = "bold " + this.taille_chiffre + "px Arial";
+
 		// On commence le dessin.
 		this.contx.beginPath();
 
@@ -491,8 +491,7 @@ class Canvas {
 		// Si le texte est vide, pas besoin de dessiner quelque chose.
 		if (this.texte == "") return;
 
-		// On sauve la police et on en definie une autre.
-		let old = this.contx.font;
+		// On défini la police à utiliser.
 		this.contx.font = "bold " + 20 + "px Arial";
 
 		// On prend la taille que va faire le texte sur le canvas.
@@ -509,9 +508,6 @@ class Canvas {
 		// On dessine le texte.
 		this.contx.fillStyle = "white";
 		this.contx.fillText(this.texte, this.elem_canvas_doc.width / 2 - w_texte / 2, this.elem_canvas_doc.height / 2);
-
-		// On remet l'ancien police dans le contexte.
-		this.contx.font = old;
 	}
 
 	// public async titre_canvas() {
@@ -528,6 +524,12 @@ class Canvas {
 	// 		}
 	// 	}, 2000);
 	// }
+
+	public origine_au_centre(){
+		this.origine = [this.elem_canvas_doc.width/2, this.elem_canvas_doc.height/2];
+		this.reload_all();
+		return true;
+	}
 
 	public reload_all() {
 
@@ -562,7 +564,7 @@ class Canvas {
 		this.reload_all();
 
 		// Après time millisecondes.
-		setTimeout(function () {
+		setTimeout(() => {
 			// Si le texte est le même que celui qu'on a laissé.
 			if (this.texte == texte) {
 				// On vide le texte.
@@ -597,11 +599,27 @@ class Canvas {
 	}
 
 	public set_zoom(val: number){
-		if(val < 0.1) return false;
+		if(val < 0.01) return false;
 		this.zoom = val;
+
+		if (this.zoom >= 10) {
+			this.zoom = parseFloat(this.zoom.toFixed(0));
+		}
+		else if (this.zoom >= .1) {
+			this.zoom = parseFloat(this.zoom.toFixed(1));
+		}
+		else {
+			this.zoom = parseFloat(this.zoom.toFixed(2));
+		}
+
 		if (this.elem_zoom != null){
 			this.elem_zoom.innerHTML = "Zoom : x " + this.zoom;
 		}
+
+		if (this.pas_auto) {
+			this.fpas_auto(true);
+		}
+
 		this.reload_all();
 		return true;
 	}
@@ -774,53 +792,50 @@ class Canvas {
 		this.elem_zoom.innerHTML = "Zoom : x " + this.zoom;
 		return true;
 	}
+
+	public set_couleurs(elem: Array<string>){
+		this.couleurs = elem;
+		return true;
+	}
+
+	public get_couleurs(){
+		return this.couleurs;
+	}
 }
 
-var can: Canvas = new Canvas(document.getElementById("canvas1") as HTMLCanvasElement);
+function init_canvas(id_canvas: string) {
+	let elem_canvas: HTMLCanvasElement = document.getElementById(id_canvas) as HTMLCanvasElement;
 
-// Event : Dès que la fenètre est redimensionnée, on appelle resize().
-// Fonction à part pour pouvoir appeler resize() dans une autre fonction.
-window.onresize = function () {
+	let can: Canvas = new Canvas(elem_canvas);
+
+	function resize() {
+		let dessusdessous = 300;
+		can.set_size_canvas(-1, window.innerHeight - dessusdessous);
+	}
+
+	window.onresize = () => resize();
+
+	// Si on appuie sur une touche...
+	window.addEventListener("keydown", (event) => {
+		// ... et que cette touche est la touche "+", on
+		// zoom (voir la fonction molette()).
+		if (event.key == "+") {
+			can.zoom_plus(10);
+		}
+
+		// Et si c'est la touche "-", on dézoom.
+		else if (event.key == "-") {
+			can.zoom_moins(10);
+		}
+
+	}, true);
+
+	elem_canvas.onmousemove = (e: MouseEvent) => can.deplace_souris(e);
+	elem_canvas.onmousedown = () => can.mouseDown();
+	elem_canvas.onmouseup = () => can.mouseUp();
+	elem_canvas.onwheel = (e: WheelEvent) => can.molette(e);
+
 	resize();
+
+	return can;
 }
-
-function deplace_souris(e: MouseEvent) {
-	can.deplace_souris(e);
-}
-
-function mouseDown() {
-	can.mouseDown();
-}
-
-function mouseUp() {
-	can.mouseUp();
-}
-
-function molette(e: WheelEvent) {
-	can.molette(e);
-}
-
-function resize() {
-	let dessusdessous = 300;
-	can.set_size_canvas(-1, window.innerHeight - dessusdessous);
-}
-
-// Si on appuie sur une touche...
-window.addEventListener("keydown", function (event) {
-	// ... et que cette touche est la touche "+", on
-	// zoom (voir la fonction molette()).
-	if (event.key == "+") {
-		can.zoom_plus(10);
-	}
-
-	// Et si c'est la touche "-", on dézoom.
-	else if (event.key == "-") {
-		can.zoom_moins(10);
-	}
-
-}, true);
-
-resize();
-can.set_elem_affichage_zoom(document.getElementById("zoom"));
-
-can.add_points(0, [new Point(0, 0), new Point(1, 0), new Point(1, 1)]);

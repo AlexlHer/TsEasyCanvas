@@ -1,0 +1,25 @@
+/* Auteur: Alexandre l'Heritier */
+
+.vignettes {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+}
+
+.sous_vignettes {
+	display: grid;
+	grid-template-columns: 1fr .5fr;
+}
+
+.surfond, .sur_surfond{
+	padding: .5em;
+	margin: 5px;
+	
+	border: #747474 2px solid;
+
+	box-shadow: 1px 1px 1px #000000;
+}
+
+canvas{
+	border: #2f2f2f 1px solid;
+	background-color: #000000;
+}

@@ -7,28 +7,110 @@
 		
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel='stylesheet' type='text/css' href='style.css' title='style' />
 	</head>
-	<body style="background: black; color: white;">
+	<body style="background: #111111; color: white;">
 		
 		<h1>
-			Canvas
+			EasyCanvas
 		</h1>
-		<div id="div_detail">
-			<h3 id="zoom">
-				Graphe
-			</h3>
-			<p>
-				<canvas id="canvas1" onmousemove="deplace_souris(event)" onmousedown="mouseDown()" onmouseup="mouseUp()" onwheel="molette(event)"></canvas>
-			</p>
-		</div>
-		<div id="div_options">
-			<h3>
-				Options
-			</h3>
-			<p>
+		<div class="vignettes">
+		
+			<!-- Première colonne -->
+			<div>
+				<div class="surfond" id="div_detail">
+					<h3 id="zoom">
+						Graphe
+					</h3>
+					<p>
+						<!-- Le canvas avec l'id à mettre en paramètre de la fonction init_canvas() de canvas.ts. -->
+						<canvas id="canvas1"></canvas>
+					</p>
+				</div>
+			</div>
 
-			</p>
+			<!-- Deuxième colonne -->
+			<div>
+				<div class="surfond" id="div_options">
+					<h3>
+						Exemples options
+						<!-- A lire avec examples.ts à coté. -->
+					</h3>
+					<div class="sous_vignettes">
+						<div>
+							<div class="sur_surfond aCentrer">
+								<button id="origine_au_centre"
+									title="Cliquer ici pour mettre l'origine du canvas actif au centre de celui-ci.">
+									Origine au milieu
+								</button>
+							</div>
+					
+							<div class="sur_surfond aCentrer" title="Permet d'afficher le cadrillage sur le canvas actif.">
+								<input type="checkbox" id="cadrillage">Afficher le cadrillage
+							</div>
+					
+							<div class="sur_surfond aCentrer" title="Permet d'afficher le repère sur le canvas actif.">
+								<input type="checkbox" id="repere" checked>Afficher le repère
+							</div>
+					
+							<div class="sur_surfond aCentrer" title="Permet de modifier la taille des nombres sur le repère.">
+								<h4>Taille des chiffres sur les axes</h4>
+					
+								<input type="range" id="taille_chiffre_axes" min="5" max="25" value="10"><br>
+								<span id="span_taille_chiffre_axes">10</span>
+							</div>
+					
+							<div class="sur_surfond aCentrer" title="Permet de changer le pas des graduations.">
+								<h4>Pas appliqué aux graduations</h4>
+					
+								<input type="checkbox" id="auto_pas_chiffre" checked>Automatique
+								<input type="number" id="pas_chiffre_axes" min="1" max="10000" value="1" disabled><br>
+							</div>
+					
+							<div class="sur_surfond aCentrer" title="Permet de changer la taille des points des courbes.">
+								<h4>Taille des points</h4>
+					
+								<input type="range" class="range" id="taille_points" min="1" max="15" value="2"><br>
+								<span id="span_taille_points">2</span>
+							</div>
+					
+							<div class="sur_surfond aCentrer" title="Permet de changer la taille des lignes entre les points.">
+								<h4>Taille des lignes reliant les points</h4>
+					
+								<input type="range" class="range" id="taille_traits" min="0" max="5" value="1"><br>
+								<span id="span_taille_traits">1</span>
+							</div>
+						</div>
+						<div>
+							<div class="sur_surfond aCentrer" title="Permet d'afficher du texte dans le canvas.">
+								<h4>Affichage de texte</h4>
+					
+								Temps d'affichage (ms) :
+								<input type="number" id="temps_affichage" min="1" max="100000" value="1000"><br>
+					
+								Texte à afficher :
+								<input type="text" id="text_affichage"><br>
+					
+								<input type="button" id="ok_affichage" value="Ok"><br>
+							</div>
+					
+							<div class="sur_surfond aCentrer" title="Permet d'utiliser le zoom canvas'.">
+								<h4>Zoom</h4>
+					
+								Valeur perso :
+								<input type="number" id="zoom_perso" min="0.01" max="1000" value="30"><br>
+					
+								Avec boutons et vitesse perso :<br>
+								<input type="button" id="zoom_moins" value="--">
+								<input type="number" id="zoom_vitesse" min="1" max="100" value="1">
+								<input type="button" id="zoom_plus" value="++"><br>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 		<script src="canvas.js"></script>
+		<script src="examples.js"></script>
 	</body>
 </html>
