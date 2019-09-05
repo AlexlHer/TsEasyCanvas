@@ -9,7 +9,7 @@ Conversion du canvas utilisé dans le projet Golf (https://tp-ssh1.dep-informati
 
 ## Compilation
 ```
-tsc canvas.ts
+tsc -p tsconfig.json
 ```
 
 ## Utilisation
